@@ -202,27 +202,37 @@ wr.puts("Im child with pid= #{$$}")
       puts "WHATS THE COMMAND !!!!#{command}----"
 
       command.each_char {|char| m.write char; }
-      puts "Fuera"
+
       result =""
-      dormir=0.1
+
+      dormir=0.01
+      inc=0.01
+      counter = 0
       while true
         begin
          
           puts "New Read = #{result}"
-          result << m.read_nonblock(256)
-          sleep 0.1
-          thread_socket.write result
-          result = ""
-          puts "sleep #{dormir}"
+          #result << m.read_nonblock(256)
+          #sleep 0.1
+          sleep dormir
+          thread_socket.write m.read_nonblock(1024)
+          #result = ""
+          #puts "sleep #{dormir}"
         rescue 
           puts "END_OF_THE_STREAM"
-          puts "OUTPUT_TERMINA=" + result
-           thread_socket.puts result if ! result.empty?
-          result = ""
-          dormir += 0.1
-          sleep dormir + 0.1
-             
-          break
+          #puts "OUTPUT_TERMINA=" + result
+           #thread_socket.puts result if ! result.empty?
+          #result = ""
+          #dormir += 0.1
+          #sleep dormir + 0.1
+            counter = counter + 1 
+            if counter < 10
+              dormir + inc
+              retry
+            else
+              dormir = 0.01
+              break
+            end
         end
       end
       result=""
