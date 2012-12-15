@@ -1,4 +1,4 @@
-#!/Users/Manolo/.rvm/rubies/ruby-1.9.2-p290/bin/ruby
+#!/usr/bin/env ruby
 ascii_art="
  ;;;;;;iiiii;;                          
                  i!!!!!!!!!!!!!!!~{:!!!!i
@@ -47,24 +47,6 @@ require 'socket'
 require 'thread'
 require 'fcntl'
 
-class Handle_conections
-    
-  
-  
-  def handle_single_connection(newsock, wr)
-     puts	"\t\tIm going to accept and im child #{$$}\n\n"
-     wr.puts("Im child with pid= #{$$}")
-     newsock[0].write("You're connected to the Ruby chatserver and my pid is  #{$$} \n")
-     newsock[0].write("server headers\n")
-     sleep 40
-     newsock[0].close 
-     puts "Socket cerradoi #{$$}"
-
-     
-  end
-  
-end
-
 class Socket_loop
   @@list_of_sockets = []
   def self.create_server
@@ -94,12 +76,6 @@ class Socket_loop
 end
 
 class Executor  
-  #Handle connection per child
-  def self.handle_hup
-    puts "Got signal"
-    Socket_loop::accept
-  end
-
   def self.fork_block(fork_amount, block)
     @rd, @wr = IO.pipe
     pids = Array.new
@@ -197,34 +173,30 @@ wr.puts("Im child with pid= #{$$}")
       command = ""
       escape = ""
       command=""
-      command = thread_socket.recv(60)
-      command.chomp!  
-      puts "WHATS THE COMMAND !!!!#{command}----"
-
-      command.each_char {|char| m.write char; }
-
+      # We shall not block
+      begin
+        m.write thread_socket.recv_nonblock(8) 
+      rescue
+       puts "NOTHING TO READ FROM USER DOES THE SERVER HAS SOMETHING?"
+       sleep 0.01
+      end
+      
       result =""
 
-      dormir=0.01
-      inc=0.01
+      dormir=0.001
+      inc=0.001
       counter = 0
       while true
         begin
          
           puts "New Read = #{result}"
-          #result << m.read_nonblock(256)
-          #sleep 0.1
+
           sleep dormir
+
           thread_socket.write m.read_nonblock(1024)
-          #result = ""
-          #puts "sleep #{dormir}"
+
         rescue 
           puts "END_OF_THE_STREAM"
-          #puts "OUTPUT_TERMINA=" + result
-           #thread_socket.puts result if ! result.empty?
-          #result = ""
-          #dormir += 0.1
-          #sleep dormir + 0.1
             counter = counter + 1 
             if counter < 10
               dormir + inc
