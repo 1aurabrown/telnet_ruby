@@ -175,10 +175,21 @@ wr.puts("Im child with pid= #{$$}")
       command=""
       # We shall not block
       begin
-        m.write thread_socket.recv_nonblock(8) 
+        command = thread_socket.recv_nonblock(8) 
+        
+        # It was sending a nasty 0 at the end causing ncurses programs to fail
+        command.sub!("\x00","")
+
+        command.each_byte {|byte| puts byte}
+
+        m.write command 
+
+       
+        #m.write thread_socket.recv_nonblock(8) 
       rescue
        puts "NOTHING TO READ FROM USER DOES THE SERVER HAS SOMETHING?"
        sleep 0.01
+       #sleep 2
       end
       
       result =""
@@ -196,7 +207,7 @@ wr.puts("Im child with pid= #{$$}")
           thread_socket.write m.read_nonblock(1024)
 
         rescue 
-          puts "END_OF_THE_STREAM"
+          #puts "END_OF_THE_STREAM"
             counter = counter + 1 
             if counter < 10
               dormir + inc
